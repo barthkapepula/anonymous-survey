@@ -25,9 +25,17 @@ class SurveyController extends Controller
         // Save survey to database
         Survey::create($validated);
 
-        // Send email
-        Mail::to(env('SURVEY_EMAIL', 'admin@example.com'))
-            ->send(new SurveySubmitted($validated));
+        // Send email with error handling
+        try {
+            Mail::to(env('SURVEY_EMAIL', 'admin@example.com'))
+                ->send(new SurveySubmitted($validated));
+        } catch (\Exception $e) {
+            // Log the error but don't show it to the user
+            \Log::error('Survey email failed: ' . $e->getMessage());
+
+            // Still show success to user since survey was saved
+            // Optionally, you could notify admins via another method
+        }
 
         return redirect()->route('survey.form')
             ->with('success', 'Thank you! Your survey has been submitted successfully.');
